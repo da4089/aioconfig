@@ -23,7 +23,54 @@
 #
 ########################################################################
 
-from .storage import StorageAdaptor, create_storage_adaptor, register_storage_adaptor
-from .core import Container, Leaf
-from .manager import Manager
 
+# Adaptor registry.
+ACCESS_ADAPTORS = {}
+
+
+class AccessAdaptor:
+    def __init__(self, manager, loop, config):
+        """Constructor.
+
+        :param manager: Reference to Manager to access.
+        :param loop: Event loop.
+        :param config: Path to adaptor configuration."""
+
+        self._manager = manager
+        self._loop = loop
+        self._config = config
+        return
+
+    async def start(self):
+        pass
+
+    async def stop(self):
+        pass
+
+
+def register_access_adaptor(scheme: str, cls):
+    """Register a configuration access adaptor implementation.
+
+    :param scheme: URL scheme for this adaptor.
+    :param cls: Adaptor implementation class reference."""
+
+    if scheme in ACCESS_ADAPTORS:
+        raise KeyError("Adaptor scheme %s already registered" % scheme)
+
+    ACCESS_ADAPTORS[scheme] = cls
+    return
+
+
+def create_access_adaptor(server_id: str, url: str) -> AccessAdaptor:
+    """Create an access adaptor instance.
+
+    :param server_id: Server instance identifier.
+    :param url: Access adaptor URL."""
+
+    scheme = url[:url.find(':')]
+    cls = ACCESS_ADAPTORS.get(scheme)
+    if cls is None:
+        raise KeyError("No implementation for scheme %s" % scheme)
+
+    adaptor = cls(server_id, url)
+    return adaptor

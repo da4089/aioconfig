@@ -24,10 +24,10 @@
 ########################################################################
 
 # Provider registry.
-ADAPTORS = {}
+STORAGE_ADAPTORS = {}
 
 
-class ConfigAdaptor:
+class StorageAdaptor:
     """Base class for configuration adaptors."""
 
     def __init__(self, server_id: str, url: str):
@@ -41,27 +41,27 @@ class ConfigAdaptor:
         return
 
 
-def register_adaptor(scheme: str, cls):
+def register_storage_adaptor(scheme: str, cls):
     """Register a configuration adaptor implementation.
 
     :param scheme: URL scheme for this adaptor.
     :param cls: Adaptor implementation class reference."""
 
-    if scheme in ADAPTORS:
-        raise KeyError("Provider scheme %s already registered" % scheme)
+    if scheme in STORAGE_ADAPTORS:
+        raise KeyError("Adaptor scheme %s already registered" % scheme)
 
-    ADAPTORS[scheme] = cls
+    STORAGE_ADAPTORS[scheme] = cls
     return
 
 
-def create(server_id: str, url: str) -> ConfigAdaptor:
-    """Create a configuration instance.
+def create_storage_adaptor(server_id: str, url: str) -> StorageAdaptor:
+    """Create a storage adaptor instance.
 
     :param server_id: Server instance identifier.
     :param url: Configuration store URL."""
 
     scheme = url[:url.find(':')]
-    cls = ADAPTORS.get(scheme)
+    cls = STORAGE_ADAPTORS.get(scheme)
     if cls is None:
         raise KeyError("No implementation for scheme %s" % scheme)
 
