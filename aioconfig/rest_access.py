@@ -42,3 +42,7 @@ class RestAccessAdaptor(AccessAdaptor):
 
     async def stop(self):
         pass
+
+    async def handle(self):
+        pass
+
