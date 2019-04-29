@@ -1,5 +1,7 @@
 
 
+import asyncio
+
 from aioconfig import Container, Leaf, Manager
 
 
@@ -7,6 +9,9 @@ class Server:
     def __init__(self):
         self.p1 = 1
         self.p2 = "two"
+
+        self.loop = asyncio.get_event_loop()
+        self.manager = Manager()
         return
 
     def set_p1(self, value):
@@ -22,6 +27,40 @@ class Server:
 
     def get_p2(self):
         return self.p2
+
+    def init_manager(self, do_init=False):
+        if do_init:
+            running = self.manager.get_node('config.running')
+            server = self.create_running_node("server", running)
+            self.create_running_node("server.p1", server)
+            self.create_running_node("server.p2", server)
+
+        else:
+            self.manager.load("sqlite3://test.db")
+
+        return
+
+    def create_running_node(self, name, parent):
+        if name == "server":
+            server = Container('server')
+            parent.add_child(server)
+            return server
+
+        elif name == "server.p1":
+            p1 = SimpleLiveLeaf('p1', parent, self.get_p1, None, None)
+            parent.add_child(p1)
+            return p1
+
+        elif name == "server.p2":
+            p2 = P2Node('p2', parent, self)
+            parent.add_child(p2)
+            return p2
+
+        return
+
+    def run(self):
+        self.loop.run_forever()
+        return
 
 
 class SimpleLiveLeaf(Leaf):
@@ -45,7 +84,7 @@ class SimpleLiveLeaf(Leaf):
 
 class P2Node(Leaf):
 
-    def __init__(self,name, parent, server):
+    def __init__(self, name, parent, server):
         super().__init__(name, parent)
         self._server = server
         return
@@ -55,16 +94,6 @@ class P2Node(Leaf):
 
 
 def test_construct():
-
     s = Server()
-
-    m = Manager()
-    running = m.get_node('config.running')
-    server = Container('server')
-    running.add_child(server)
-
-    p1 = SimpleLiveLeaf('p1', server, s.get_p1, None, None)
-    server.add_child(p1)
-
-    p2 = P2Node('p2', server, s)
-    server.add_child(p2)
+    s.init_manager(True)
+    s.run()

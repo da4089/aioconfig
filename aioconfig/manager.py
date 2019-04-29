@@ -23,7 +23,20 @@
 #
 ########################################################################
 
+# FIXME!
+# So, the open issue here is that when populating the 'running' tree,
+# the nodes need to be the right cloas to interact with the server,
+# implementing their configuration values.
+#
+# How do we know, when copying from saved/staged, what class to use?
+#
+# So, there's a function in the *server* which currently does this,
+# switching on the full path of the node.
+#
+# This is a bit ugly.  Perhaps a solution with a decorator would be
+# nicer?
 
+import datetime
 from .core import Container
 
 
@@ -65,22 +78,63 @@ class Manager:
         """Load values of nodes from specified storage.
 
         :param url: Configuration storage URL."""
+
+        self.restore_staged()
+        self.restore_running()
+        return
+
+    def prune_saved(self, cutoff: datetime.datetime):
+        """Delete saved trees older than 'cutoff'.
+
+        :param cutoff: Discard saved trees older than this."""
         pass
 
     def save_running(self):
         """Persist running configuration."""
-        pass
 
-    def load_saved(self):
-        """Load a previously-saved configuration to running."""
-        pass
+        now = datetime.datetime.utcnow()
+        name = now.strftime('%Y%M%DT%h:%m:%s.%S')
 
-    def load_staged(self):
-        """Load the staged configuration to running."""
-        pass
+        #FIXME: rename previous 'current' node to datetime
+        #FIXME: create datetime child node.
 
-    def save_to_staged(self, name: str):
+        return self.copy('running', 'saved.' + name)
+
+    def restore_running(self, savepoint: str = None):
+        """Load a previously-saved configuration to running.
+
+        :param savepoint: Timestamp name of configuration to restore."""
+        if not savepoint:
+            savepoint = 'current'
+        return self.copy(savepoint, 'running')
+
+    def save_staged(self):
+        """Persist staged configuration."""
+        return self.copy('staged', 'saved.staged')
+
+    def restore_staged(self):
+        """Load the persisted staged configuration."""
+        return self.copy('saved.staged', 'staged')
+
+    def deploy_staged(self):
+        """Copy staged configuration to running."""
+        return self.copy('staged', 'running')
+
+    def save_to_staged(self, name: str = None):
         """Copy specified configuration to staged.
 
         :param name: Root node from which to copy."""
+        if not name:
+            name = 'running'
+        return self.copy(name, 'staged')
 
+    def copy(self, source: str, dest: str):
+        """Deep copy tree.
+
+        :param source: Source tree root node name.
+        :param dest: Destination tree root node name."""
+
+        # Find source node.
+        # Find destination node.
+        # Deep copy source to destination.
+        return
