@@ -23,6 +23,9 @@
 #
 ########################################################################
 
+from .core import Container, Leaf
+
+
 # Provider registry.
 STORAGE_ADAPTORS = {}
 
@@ -39,6 +42,18 @@ class StorageAdaptor:
         self._server_id = server_id
         self._url = url
         return
+
+    def save_saved(self, node: Container):
+        pass
+
+    def load_saved(self, node: Container):
+        pass
+
+    def save_staged(self, node: Container):
+        pass
+
+    def load_staged(self, node: Container):
+        pass
 
 
 def register_storage_adaptor(scheme: str, cls):
