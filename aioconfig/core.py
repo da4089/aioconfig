@@ -29,15 +29,32 @@ from typing import Union
 NodeType = Union['Container', 'Leaf']
 
 
-class Container:
+class Node:
+    """Base class for tree nodes."""
+
+    @staticmethod
+    def is_leaf() -> bool:
+        """Return False for Container instances."""
+        pass
+
+    def get_name(self) -> str:
+        """Return the name of this node."""
+        pass
+
+    def get_parent(self) -> 'Container':
+        """Get the container for this node."""
+        pass
+
+
+class Container(Node):
     """Base class for container nodes."""
 
-    def __init__(self, name: str):
+    def __init__(self, name: str, parent: 'Container' = None):
         """Constructor.
 
         :param name: Name for tree node."""
         self._name = name
-        self._parent = None
+        self._parent = parent
         self._children = {}
         return
 
@@ -102,16 +119,16 @@ class Container:
         return self._children.get(name)
 
     def items(self):
-        pass
+        return self._children.items()
 
     def keys(self):
-        pass
+        return self._children.keys()
 
     def values(self):
-        pass
+        return self._children.values()
 
 
-class Leaf:
+class Leaf(Node):
     """Base class for leaf nodes."""
 
     def __init__(self, name: str, parent: Container):

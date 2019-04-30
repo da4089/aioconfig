@@ -37,7 +37,7 @@
 # nicer?
 
 import datetime
-from .core import Container
+from .core import Container, Leaf, Node
 
 
 class Manager:
@@ -93,10 +93,10 @@ class Manager:
         """Persist running configuration."""
 
         now = datetime.datetime.utcnow()
-        name = now.strftime('%Y%M%DT%h:%m:%s.%S')
+        name = now.strftime('%Y-%m-%dT%H:%M:%S.') + "%06u" % now.microsecond
 
-        #FIXME: rename previous 'current' node to datetime
-        #FIXME: create datetime child node.
+        saved = self.get_node('config.saved')
+        saved.add_child(Container(name))
 
         return self.copy('running', 'saved.' + name)
 
@@ -134,7 +134,23 @@ class Manager:
         :param source: Source tree root node name.
         :param dest: Destination tree root node name."""
 
-        # Find source node.
-        # Find destination node.
+        src = self.get_node(source)
+        dst = self.get_node(dest)
+
         # Deep copy source to destination.
-        return
+        for child in src.values():
+            self._copy(child, dst)
+
+        return dest
+
+    def _copy(self, src: Node, dst_parent: Container):
+        """(Internal) Copying helper function."""
+
+        if src.is_leaf():
+            leaf = dst_parent.add_child(Leaf(src.get_name(), dst_parent))
+            leaf.set(src.get())
+
+        else:
+            c = dst_parent.add_child(Container(src.get_name(), dst_parent))
+            for child in src.values():
+                self._copy(child, c)
