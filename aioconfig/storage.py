@@ -23,7 +23,8 @@
 #
 ########################################################################
 
-from .core import Container, Leaf
+import datetime
+from typing import List
 
 
 # Provider registry.
@@ -43,16 +44,36 @@ class StorageAdaptor:
         self._url = url
         return
 
-    def save_saved(self, node: Container):
+    def load_current(self) -> dict:
+        """Load current (latest) saved configuration."""
         pass
 
-    def load_saved(self, node: Container):
+    def load_staged(self):
+        """Load staged configuration."""
         pass
 
-    def save_staged(self, node: Container):
+    def load_saved(self, name: datetime.datetime):
+        """Load specified saved configuration.
+
+        :param name: Timestamp to load."""
         pass
 
-    def load_staged(self, node: Container):
+    def save_current(self, config: dict):
+        """Save config as running."""
+        pass
+
+    def save_staged(self, config: dict):
+        """Save config as staged."""
+        pass
+
+    def list_saved(self) -> List[datetime.datetime]:
+        """List timestamps of all saved (un-archived) configurations."""
+        pass
+
+    def archive(self, cutoff: datetime.datetime):
+        """Flag as archived all configurations older than timestamp.
+
+        :param cutoff: Cut-off timestamp."""
         pass
 
 
