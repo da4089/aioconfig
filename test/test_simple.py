@@ -2,12 +2,15 @@
 
 import asyncio
 
-from aioconfig import Object, Property, Manager, FUNCS
+from aioconfig import List, Object, Property, Manager
 
+
+# Test application
 
 class Session:
 
-    def __init__(self, name: str):
+    def __init__(self, server: 'Server', name: str):
+        self._server = server
         self._name = name
         self.sp1 = "sp1"
         self.sp2 = "sp2"
@@ -36,11 +39,9 @@ class Server:
     def __init__(self):
         self.p1 = 1
         self.p2 = "two"
-
         self.sessions = {}
 
         self.loop = asyncio.get_event_loop()
-        self.manager = Manager()
         return
 
     def set_p1(self, value):
@@ -58,39 +59,12 @@ class Server:
         return self.p2
 
     def create_session(self, name):
-        session = Session(name)
+        session = Session(self, name)
         self.sessions[name] = session
         return session
 
-    def init_manager(self, do_init=False):
-        if do_init:
-            running = self.manager.get_node('config.running')
-            server = self.create_server(running)
-            self.create_p1(server)
-            self.create_p2(server)
-            self.create_sessions(running)
 
-        else:
-            self.manager.load("sqlite3://test.db")
-
-        return
-
-    def create_server(self, parent: Object):
-        return parent.add_child(Object("server"))
-
-    def create_sessions(self, parent: Object):
-        return parent.add_child(Object("sessions"))
-
-    def create_p1(self, parent: Object):
-        return parent.add_child(SimpleLiveProperty("p1", parent, self.get_p1))
-
-    def create_p2(self, parent: Object):
-        return parent.add_child(P2Node("p2", parent, self))
-
-    def run(self):
-        self.loop.run_forever()
-        return
-
+# Management classes
 
 class SimpleLiveProperty(Property):
 
@@ -122,8 +96,79 @@ class P2Node(Property):
         return self._server.get_p2()
 
 
+class SessionManager(Object):
+
+    def __init__(self, name, parent, session):
+        super().__init__(name, parent)
+        self._session = session
+
+        self.add_child(SimpleLiveProperty("sp1", self,
+                                          session.get_p1,
+                                          session.set_p1))
+
+        self.add_child(SimpleLiveProperty("sp2", self,
+                                          session.get_p2,
+                                          session.set_p2))
+        return
+
+
+class SessionsManager(List):
+
+    def __init__(self, name, parent):
+        super().__init__(name, parent)
+        return
+
+    def add_session(self, name):
+        pass
+
+    def delete_session(self, name):
+        pass
+
+    def get_sessions(self):
+        pass
+
+    def get_session(self, index: int):
+        pass
+
+
+class ServerManager(Object):
+    pass
+
+
+# Test functions
+
 def test_construct():
+
     s = Server()
-    s.init_manager(True)
-    #s.run()
+    m = Manager()
+
+    running = m.get_node('config.running')
+    server = running.add_child(Object("server", running))
+    server.add_child(SimpleLiveProperty("p1", server, s.get_p1))
+    server.add_child(P2Node("p2", server, s))
+    running.add_child(List("sessions", running))
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(m.start())
+
+    loop.run_until_complete(m.stop())
+
+
+x = {
+    "foo": {
+        "bar": 1
+    },
+    "baz": [
+        {
+            "x": 1,
+            "y": 2
+        },
+        {
+            "x": 11,
+            "y": 12
+        }
+    ]
+}
+
+y = "foo.baz.1.y"
 
