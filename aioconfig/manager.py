@@ -37,7 +37,7 @@
 # nicer?
 
 import datetime
-from .core import Container, Leaf, Node
+from .core import Object, Property, Node
 
 
 class Manager:
@@ -46,16 +46,16 @@ class Manager:
     def __init__(self):
         """Constructor."""
 
-        self._root = Container('')
+        self._root = Object('')
 
-        config = Container('config')
+        config = Object('config')
         self._root.add_child(config)
 
-        config.add_child(Container('running'))
-        config.add_child(Container('saved'))
-        config.add_child(Container('staged'))
+        config.add_child(Object('running'))
+        config.add_child(Object('saved'))
+        config.add_child(Object('staged'))
 
-        self._root.add_child(Container('status'))
+        self._root.add_child(Object('status'))
         return
 
     def get_node(self, name: str):
@@ -96,7 +96,7 @@ class Manager:
         name = now.strftime('%Y-%m-%dT%H:%M:%S.') + "%06u" % now.microsecond
 
         saved = self.get_node('config.saved')
-        saved.add_child(Container(name))
+        saved.add_child(Object(name))
 
         return self.copy('running', 'saved.' + name)
 
@@ -143,14 +143,14 @@ class Manager:
 
         return dest
 
-    def _copy(self, src: Node, dst_parent: Container):
+    def _copy(self, src: Node, dst_parent: Object):
         """(Internal) Copying helper function."""
 
         if src.is_leaf():
-            leaf = dst_parent.add_child(Leaf(src.get_name(), dst_parent))
+            leaf = dst_parent.add_child(Property(src.get_name(), dst_parent))
             leaf.set(src.get())
 
         else:
-            c = dst_parent.add_child(Container(src.get_name(), dst_parent))
+            c = dst_parent.add_child(Object(src.get_name(), dst_parent))
             for child in src.values():
                 self._copy(child, c)

@@ -26,7 +26,8 @@
 from typing import Union
 
 
-NodeType = Union['Container', 'Leaf']
+NodeType = Union['List', 'Object', 'Property']
+ParentType = Union['List', 'Object']
 
 
 class Node:
@@ -41,18 +42,71 @@ class Node:
         """Return the name of this node."""
         pass
 
-    def get_parent(self) -> 'Container':
+    def get_parent(self) -> ParentType:
         """Get the container for this node."""
         pass
 
 
-class Container(Node):
-    """Base class for container nodes."""
+class List(Node):
+    """Base class for a list of nodes."""
 
-    def __init__(self, name: str, parent: 'Container' = None):
+    def __init__(self, name: str, parent: ParentType):
         """Constructor.
 
-        :param name: Name for tree node."""
+        :param name: Name of tree node.
+        :param parent: Parent of this node."""
+        self._name = name
+        self._parent = parent
+        self._children = []
+        return
+
+    @staticmethod
+    def is_leaf() -> bool:
+        """Return False for List instances."""
+        return False
+
+    def get_name(self) -> str:
+        """Return the name of this node."""
+        return self._name
+
+    def set_parent(self, parent: ParentType):
+        """Set the container for this node.
+
+        :param parent: Parent of this node."""
+        self._parent = parent
+        return
+
+    def get_parent(self) -> ParentType:
+        """Get the container for this node."""
+        return self._parent
+
+    def append_child(self, node: NodeType) -> NodeType:
+        """Append a child to this node.
+
+        :param node: New child for this node."""
+        self._children.append(node)
+        return node
+
+    def insert_child(self, index: int, node: NodeType):
+        self._children.insert(index, node)
+        return
+
+    def remove_child(self, index: int):
+        """Remove a child from this node.
+
+        :param index: Integer index of child to be removed."""
+        del self._children[index]
+        return
+
+
+class Object(Node):
+    """Base class for configuration object nodes."""
+
+    def __init__(self, name: str, parent: ParentType = None):
+        """Constructor.
+
+        :param name: Name of tree node.
+        :param parent: Parent of this node."""
         self._name = name
         self._parent = parent
         self._children = {}
@@ -60,21 +114,21 @@ class Container(Node):
 
     @staticmethod
     def is_leaf() -> bool:
-        """Return False for Container instances."""
+        """Return False for object instances."""
         return False
 
     def get_name(self) -> str:
         """Return the name of this node."""
         return self._name
 
-    def set_parent(self, parent: 'Container'):
+    def set_parent(self, parent: ParentType):
         """Set the container for this node.
 
         :param parent: Reference to parent container."""
         self._parent = parent
         return
 
-    def get_parent(self) -> 'Container':
+    def get_parent(self) -> ParentType:
         """Get the container for this node."""
         return self._parent
 
@@ -128,10 +182,10 @@ class Container(Node):
         return self._children.values()
 
 
-class Leaf(Node):
+class Property(Node):
     """Base class for leaf nodes."""
 
-    def __init__(self, name: str, parent: Container):
+    def __init__(self, name: str, parent: Object):
         """Constructor.
 
         :param name: Name for tree node.
@@ -149,14 +203,14 @@ class Leaf(Node):
         """Return the name of this node."""
         return self._name
 
-    def set_parent(self, parent: Container):
+    def set_parent(self, parent: Object):
         """Set the container for this node.
 
         :param parent: Reference to parent container."""
         self._parent = parent
         return
 
-    def get_parent(self) -> Container:
+    def get_parent(self) -> Object:
         """Get the container for this node."""
         return self._parent
 
