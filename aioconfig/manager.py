@@ -38,6 +38,8 @@
 
 import datetime
 from .core import Object, Property, Node
+from .storage import create_storage_adaptor
+from .access import create_access_adaptor
 
 
 class Manager:
@@ -45,6 +47,11 @@ class Manager:
 
     def __init__(self):
         """Constructor."""
+
+        self._server_id = None
+        self._config_url = None
+        self._store = None
+        self._accessors = {}
 
         self._root = Object('')
 
@@ -154,3 +161,34 @@ class Manager:
             c = dst_parent.add_child(Object(src.get_name(), dst_parent))
             for child in src.values():
                 self._copy(child, c)
+
+    def set_config(self, server_id: str, url: str):
+        """Set a configuration for this manager.
+
+        :param server_id: Server instance identifier.
+        :param url: Source and address of configuration data."""
+
+        self._server_id = server_id
+        self._config_url = url
+
+        self._store = create_storage_adaptor(server_id, url)
+        return
+
+    def add_access(self, url: str):
+        """Add an access method for this manager.
+
+        :param url: Source and address of access method."""
+
+        accessor = create_access_adaptor(self._server_id, url)
+        self._accessors[url]  = accessor
+        return
+
+    async def start(self):
+        for accessor in self._accessors.values():
+            await accessor.start()
+        return
+
+    async def stop(self):
+        for accessor in self._accessors.values():
+            await accessor.stop()
+        return

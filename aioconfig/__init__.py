@@ -24,7 +24,7 @@
 ########################################################################
 
 from .storage import StorageAdaptor, create_storage_adaptor, register_storage_adaptor
-from .core import Object, Property
+from .core import List, Object, Property
 from .manager import Manager
 from .errors import *
 

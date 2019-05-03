@@ -23,7 +23,7 @@
 #
 ########################################################################
 
-from typing import Union
+from typing import List, Union
 
 
 NodeType = Union['List', 'Object', 'Property']
@@ -97,6 +97,9 @@ class List(Node):
         :param index: Integer index of child to be removed."""
         del self._children[index]
         return
+
+    def values(self) -> List[NodeType]:
+        return self._children.copy()
 
 
 class Object(Node):
@@ -185,7 +188,7 @@ class Object(Node):
 class Property(Node):
     """Base class for leaf nodes."""
 
-    def __init__(self, name: str, parent: Object):
+    def __init__(self, name: str, parent: Object = None):
         """Constructor.
 
         :param name: Name for tree node.

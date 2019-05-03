@@ -23,6 +23,10 @@
 #
 ########################################################################
 
+import aiohttp.web
+import aiohttp_cors
+import ssl
+
 from .access import AccessAdaptor
 
 
@@ -35,14 +39,85 @@ class RestAccessAdaptor(AccessAdaptor):
         :param config: Path to adaptor configuration."""
 
         super().__init__(manager, loop, config)
+
+        self._app = None
+        self._cors = None
+        self._runner = None
+        self._site = None
+
+        self._port = 443
+
+        self._root = None
         return
 
     async def start(self):
-        pass
+
+        try:
+            self._app = aiohttp.web.Application()
+            self._cors = aiohttp_cors.setup(
+                self._app,
+                defaults={
+                    "*": aiohttp_cors.ResourceOptions(
+                        allow_methods=["GET", "PUT", "POST", "DELETE"],
+                        allow_credentials=True,
+                        expose_headers="*",
+                        allow_headers="*")})
+
+            self._cors.add(self._app.router.add_route("GET",
+                                                      "/{tail:.*}",
+                                                      self.handle))
+            self._cors.add(self._app.router.add_route("PUT",
+                                                      "/{tail:.*}",
+                                                      self.handle))
+            self._cors.add(self._app.router.add_route("POST",
+                                                      "/{tail:.*}",
+                                                      self.handle))
+            self._cors.add(self._app.router.add_route("DELETE",
+                                                      "/{tail:.*}",
+                                                      self.handle))
+
+            ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            ssl_context.load_cert_chain('domain_srv.crt', 'domain_srv.key')
+
+            self._runner = aiohttp.web.AppRunner(self._app)
+            await self._runner.setup()
+
+            self._site = aiohttp.web.TCPSite(self._runner,
+                                             host="0.0.0.0",
+                                             port=self._port,
+                                             ssl_context=ssl_context)
+            await self._site.start()
+
+        except:
+            pass
+
+        return
 
     async def stop(self):
+        """Stop running this accessor."""
+
+        if self._site:
+            await self._site.stop()
+            self._site = None
+
+        if self._runner:
+            await self._runner.cleanup()
+            self._runner = None
+
+        if self._app:
+            await self._app.shutdown()
+            await self._app.cleanup()
+            self._app = None
+
+        return
+
+    async def change_port(self, new_port: int):
         pass
 
-    async def handle(self):
-        pass
+    async def handle(self, request):
+        if request.path == '/':
+            path = []
+        else:
+            path = request.path[1:].split('/')
 
+        return await self._root.handle(path, request)
