@@ -40,8 +40,53 @@ FUNCS = {}
 # I can get the parent from the node itself also.
 # So ... can I remove the need to include the path element name?
 
-def config_path(path: str):
-    def register_with_path(func):
+
+# The intention here is that getter functions on an object are decorated
+# to record their path in the management tree.  This then records the
+# *bound* method as the getter for the decorated path.
+#
+# When the path has asterisks embedded, it applies to all children of
+# the enclosing container.  It might be that I want to distinguish
+# between a dictionary container and a list container?  List containers
+# apply the same properties to all elements, dictionaries don't.
+
+def get(path: str):
+    def register_getter_with_path(func):
         FUNCS[path] = func
         return func
-    return register_with_path
+    return register_getter_with_path
+
+
+def set(path: str):
+    def register_setter_with_path(func):
+        FUNCS[path] = func
+        return func
+    return register_setter_with_path
+
+
+def delete(path: str):
+    def register_deleter_with_path(func):
+        FUNCS[path] = func
+        return func
+    return register_deleter_with_path
+
+
+def create_child(path: str):
+    def register_creator_with_path(func):
+        FUNCS[path] = func
+        return func
+    return register_creator_with_path
+
+
+def create_element(path: str):
+    def register_creator_with_path(func):
+        FUNCS[path] = func
+        return func
+    return register_creator_with_path
+
+def create_object(path: str):
+    def register_creator_with_path(func):
+        FUNCS[path] = func
+        return func
+    return register_creator_with_path
+

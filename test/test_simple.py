@@ -1,11 +1,46 @@
 
 
 import asyncio
+import aioconfig
 
-from aioconfig import Container, Leaf, Manager, config_path, FUNCS
+from aioconfig import Container, Leaf, Manager, FUNCS
+
+
+class Session:
+
+    @aioconfig.create_element("sessions.*")
+    def __init__(self, name: str):
+        self._name = name
+        self.sp1 = "sp1"
+        self.sp2 = "sp2"
+        return
+
+    @aioconfig.set("sessions.*.sp1")
+    def set_sp1(self, value):
+        self.sp1 = value
+        return
+
+    @aioconfig.get("sessions.*.sp1")
+    def get_sp1(self):
+        return self.sp1
+
+    @aioconfig.set("sessions.*.sp2")
+    def set_sp2(self, value):
+        self.sp2 = value
+        return
+
+    @aioconfig.get("sessions.*.sp2")
+    def get_sp2(self):
+        return self.sp2
+
+    @aioconfig.delete("sessions.*")
+    def destroy(self):
+        return
 
 
 class Server:
+
+    @aioconfig.create_object("server")
     def __init__(self):
         self.p1 = 1
         self.p2 = "two"
@@ -14,19 +49,29 @@ class Server:
         self.manager = Manager()
         return
 
+    @aioconfig.set("server.p1")
     def set_p1(self, value):
         self.p1 = value
         return
 
+    @aioconfig.get("server.p1")
     def get_p1(self):
         return self.p1
 
+    @aioconfig.set("server.p2")
     def set_p2(self, value):
         self.p2 = value
         return
 
+    @aioconfig.get("server.p2")
     def get_p2(self):
         return self.p2
+
+    @aioconfig.create_child("sessions")
+    def create_session(self, name):
+        session = Session(name)
+        self._sessions[name] = session
+        return session
 
     def init_manager(self, do_init=False):
         if do_init:
@@ -40,15 +85,14 @@ class Server:
 
         return
 
-    @config_path("server")
+    # FIXME: try to get rid of these!
+
     def create_server(self, parent: Container):
         return parent.add_child(Container("server"))
 
-    @config_path("server.p1")
     def create_p1(self, parent: Container):
         return parent.add_child(SimpleLiveLeaf("p1", parent, self.get_p1))
 
-    @config_path("server.p2")
     def create_p2(self, parent: Container):
         return parent.add_child(P2Node("p2", parent, self))
 
@@ -56,6 +100,8 @@ class Server:
         self.loop.run_forever()
         return
 
+
+# FIXME: this should be elsewhere, I guess?!
 
 class SimpleLiveLeaf(Leaf):
 
@@ -75,6 +121,8 @@ class SimpleLiveLeaf(Leaf):
     def delete(self):
         return self._del()
 
+
+# FIXME: this should remain an option: a dedicated class to manage a node.
 
 class P2Node(Leaf):
 
