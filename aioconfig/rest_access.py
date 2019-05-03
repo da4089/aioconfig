@@ -51,6 +51,7 @@ class RestAccessAdaptor(AccessAdaptor):
         return
 
     async def start(self):
+        """Start the accessor running."""
 
         try:
             self._app = aiohttp.web.Application()
