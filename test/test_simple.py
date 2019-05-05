@@ -148,8 +148,12 @@ def test_construct():
     server.add_child(P2Node("p2", server, s))
     running.add_child(List("sessions", running))
 
+    m.add_access("rest://0.0.0.0:443")
+
     loop = asyncio.get_event_loop()
     loop.run_until_complete(m.start())
+
+    #loop.run_forever()
 
     loop.run_until_complete(m.stop())
 
@@ -172,3 +176,6 @@ x = {
 
 y = "foo.baz.1.y"
 
+
+if __name__ == "__main__":
+    test_construct()

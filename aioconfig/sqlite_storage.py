@@ -32,7 +32,7 @@ from dateutil.parser import parse as parse_date
 from typing import Optional
 
 from .errors import BadStorageURLFormat, BadStorageURLScheme
-from .storage import StorageAdaptor
+from .storage import StorageAdaptor, register_storage_adaptor
 
 
 # Stored as a single database table.  Each row contains a JSON-encoded
@@ -231,3 +231,6 @@ class SqliteStorageAdaptor(StorageAdaptor):
 
         path = url[point + 3:]
         return path
+
+
+register_storage_adaptor("sqlite3", SqliteStorageAdaptor)

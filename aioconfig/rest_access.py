@@ -27,18 +27,18 @@ import aiohttp.web
 import aiohttp_cors
 import ssl
 
-from .access import AccessAdaptor
+from .access import AccessAdaptor, register_access_adaptor
+from .manager import Manager
 
 
 class RestAccessAdaptor(AccessAdaptor):
-    def __init__(self, manager, loop, config):
+    def __init__(self, manager: Manager, url: str):
         """Constructor.
 
         :param manager: Reference to Manager to access.
-        :param loop: Event loop.
-        :param config: Path to adaptor configuration."""
+        :param url: Access URL."""
 
-        super().__init__(manager, loop, config)
+        super().__init__(manager, url)
 
         self._app = None
         self._cors = None
@@ -77,19 +77,20 @@ class RestAccessAdaptor(AccessAdaptor):
                                                       "/{tail:.*}",
                                                       self.handle))
 
-            ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-            ssl_context.load_cert_chain('domain_srv.crt', 'domain_srv.key')
+            #ssl_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+            #ssl_context.load_cert_chain('domain_srv.crt', 'domain_srv.key')
 
             self._runner = aiohttp.web.AppRunner(self._app)
             await self._runner.setup()
 
             self._site = aiohttp.web.TCPSite(self._runner,
                                              host="0.0.0.0",
-                                             port=self._port,
-                                             ssl_context=ssl_context)
+                                             port=self._port)
+                                             #ssl_context=ssl_context)
             await self._site.start()
 
-        except:
+        except Exception as e:
+            print(e)
             pass
 
         return
@@ -122,3 +123,6 @@ class RestAccessAdaptor(AccessAdaptor):
             path = request.path[1:].split('/')
 
         return await self._root.handle(path, request)
+
+
+register_access_adaptor("rest", RestAccessAdaptor)

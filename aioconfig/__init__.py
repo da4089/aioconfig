@@ -27,6 +27,10 @@ from .storage import StorageAdaptor, create_storage_adaptor, register_storage_ad
 from .core import List, Object, Property
 from .manager import Manager
 from .errors import *
+from .access import AccessAdaptor, create_access_adaptor, register_access_adaptor
+
+import aioconfig.sqlite_storage
+import aioconfig.rest_access
 
 
 # FIXME: import functools

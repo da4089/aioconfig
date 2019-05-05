@@ -23,22 +23,22 @@
 #
 ########################################################################
 
+#from .manager import Manager
+
 
 # Adaptor registry.
 ACCESS_ADAPTORS = {}
 
 
 class AccessAdaptor:
-    def __init__(self, manager, loop, config):
+    def __init__(self, manager: 'Manager', url: str):
         """Constructor.
 
         :param manager: Reference to Manager to access.
-        :param loop: Event loop.
-        :param config: Path to adaptor configuration."""
+        :param url: Access URL."""
 
         self._manager = manager
-        self._loop = loop
-        self._config = config
+        self._url = url
         return
 
     async def start(self):
@@ -61,16 +61,16 @@ def register_access_adaptor(scheme: str, cls):
     return
 
 
-def create_access_adaptor(server_id: str, url: str) -> AccessAdaptor:
+def create_access_adaptor(manager: 'Manager', url: str) -> AccessAdaptor:
     """Create an access adaptor instance.
 
-    :param server_id: Server instance identifier.
-    :param url: Access adaptor URL."""
+    :param manager: Reference Manager instance.
+    :param url: Adaptor URL."""
 
     scheme = url[:url.find(':')]
     cls = ACCESS_ADAPTORS.get(scheme)
     if cls is None:
         raise KeyError("No implementation for scheme %s" % scheme)
 
-    adaptor = cls(server_id, url)
+    adaptor = cls(manager, url)
     return adaptor
