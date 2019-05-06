@@ -43,6 +43,7 @@ class Session:
             print(self._name)
             await asyncio.sleep(1)
 
+        print("session %s dead" % self._name)
         return
 
 
@@ -75,6 +76,12 @@ class Server:
         self.sessions[name] = session
         return session
 
+    def destroy_session(self, name):
+        session = self.sessions[name]
+        del self.sessions[name]
+        session.destroy()
+        return
+
 
 ################################################################
 # Management classes
@@ -92,10 +99,12 @@ class SimpleLiveProperty(Property):
         return self._get()
 
     def set(self, value):
-        return self._set(value)
+        if self._set:
+            return self._set(value)
 
     def delete(self):
-        return self._del()
+        if self._del:
+            return self._del()
 
 
 class P2Node(Property):
@@ -124,24 +133,39 @@ class SessionManager(Object):
                                           session.set_sp2))
         return
 
+    def delete(self):
+        sp1 = self.remove_child("sp1")
+        sp1.delete()
+        del sp1
 
-class SessionsManager(List):
+        sp2 = self.remove_child("sp2")
+        sp2.delete()
+        del sp2
 
-    def __init__(self, name, parent):
+        super().delete()
+        return
+
+
+class SessionsManager(Object):
+
+    def __init__(self, name, parent, server):
         super().__init__(name, parent)
+        self._server = server
         return
 
     def add_session(self, name):
-        pass
+        session = self._server.create_session(name)
+
+        session_manager = SessionManager(name, self, session)
+        self.add_child(session_manager)
+        return
 
     def delete_session(self, name):
-        pass
+        session_manager = self.remove_child(name)
+        session_manager.delete()
 
-    def get_sessions(self):
-        pass
-
-    def get_session(self, index: int):
-        pass
+        self._server.destroy_session(name)
+        return
 
 
 class ServerManager(Object):
@@ -153,16 +177,21 @@ class ServerManager(Object):
 
 async def sequence(server, manager):
 
-    await asyncio.sleep(5)
+    sessions: SessionsManager = manager.get_node('config.running.sessions')
 
-    sessions: List = manager.get_node('config.running.sessions')
+    await asyncio.sleep(2)
+    sessions.add_session('sa')
 
-    session = Session(server, "sa")
-    session_manager = SessionManager("sa", sessions, session)
-    sessions.append_child(session_manager)
+    await asyncio.sleep(2)
+    sessions.add_session('sb')
 
-    await asyncio.sleep(5)
+    await asyncio.sleep(2)
+    sessions.add_session('sc')
 
+    await asyncio.sleep(1)
+    sessions.delete_session('sa')
+
+    await asyncio.sleep(1)
     return
 
 
@@ -175,7 +204,7 @@ def test_construct():
     server = running.add_child(Object("server", running))
     server.add_child(SimpleLiveProperty("p1", server, s.get_p1))
     server.add_child(P2Node("p2", server, s))
-    running.add_child(List("sessions", running))
+    running.add_child(SessionsManager("sessions", running, s))
 
     m.add_access("rest://0.0.0.0:443")
 
