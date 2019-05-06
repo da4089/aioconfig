@@ -23,7 +23,7 @@
 #
 ########################################################################
 
-from typing import List, Union
+from typing import List as List_t, Union
 
 
 NodeType = Union['List', 'Object', 'Property']
@@ -98,8 +98,11 @@ class List(Node):
         del self._children[index]
         return
 
-    def values(self) -> List[NodeType]:
+    def values(self) -> List_t[NodeType]:
         return self._children.copy()
+
+    def delete(self):
+        pass
 
 
 class Object(Node):
@@ -183,6 +186,9 @@ class Object(Node):
 
     def values(self):
         return self._children.values()
+
+    def delete(self):
+        pass
 
 
 class Property(Node):
