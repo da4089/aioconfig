@@ -5,6 +5,7 @@ import asyncio
 from aioconfig import List, Object, Property, Manager
 
 
+################################################################
 # Test application
 
 class Session:
@@ -14,6 +15,9 @@ class Session:
         self._name = name
         self.sp1 = "sp1"
         self.sp2 = "sp2"
+
+        self.dead = False
+        self.task = asyncio.ensure_future(self.process())
         return
 
     def set_sp1(self, value):
@@ -31,6 +35,14 @@ class Session:
         return self.sp2
 
     def destroy(self):
+        self.dead = True
+        return
+
+    async def process(self):
+        while not self.dead:
+            print(self._name)
+            await asyncio.sleep(1)
+
         return
 
 
@@ -64,6 +76,7 @@ class Server:
         return session
 
 
+################################################################
 # Management classes
 
 class SimpleLiveProperty(Property):
@@ -103,12 +116,12 @@ class SessionManager(Object):
         self._session = session
 
         self.add_child(SimpleLiveProperty("sp1", self,
-                                          session.get_p1,
-                                          session.set_p1))
+                                          session.get_sp1,
+                                          session.set_sp1))
 
         self.add_child(SimpleLiveProperty("sp2", self,
-                                          session.get_p2,
-                                          session.set_p2))
+                                          session.get_sp2,
+                                          session.set_sp2))
         return
 
 
@@ -135,7 +148,23 @@ class ServerManager(Object):
     pass
 
 
+################################################################
 # Test functions
+
+async def sequence(server, manager):
+
+    await asyncio.sleep(5)
+
+    sessions: List = manager.get_node('config.running.sessions')
+
+    session = Session(server, "sa")
+    session_manager = SessionManager("sa", sessions, session)
+    sessions.append_child(session_manager)
+
+    await asyncio.sleep(5)
+
+    return
+
 
 def test_construct():
 
@@ -152,29 +181,8 @@ def test_construct():
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(m.start())
-
-    #loop.run_forever()
-
+    loop.run_until_complete(sequence(s, m))
     loop.run_until_complete(m.stop())
-
-
-x = {
-    "foo": {
-        "bar": 1
-    },
-    "baz": [
-        {
-            "x": 1,
-            "y": 2
-        },
-        {
-            "x": 11,
-            "y": 12
-        }
-    ]
-}
-
-y = "foo.baz.1.y"
 
 
 if __name__ == "__main__":
