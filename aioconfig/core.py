@@ -243,5 +243,10 @@ class Property(Node):
         pass
 
     def delete(self):
-        """Destroy this node."""
+        """Destroy this node.
+
+        Destroy is called, not when the service is shut down, but if
+        a property is actually *removed* from the configuration.  Often,
+        this has more effect at the Object level, rather than for its
+        properties, but it depends on the actual semantics."""
         pass
