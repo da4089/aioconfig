@@ -13,26 +13,26 @@ class Session:
     def __init__(self, server: 'Server', name: str):
         self._server = server
         self._name = name
-        self.sp1 = "sp1"
-        self.sp2 = "sp2"
+        self.host = "host"
+        self.port = "port"
 
         self.dead = False
         self.task = asyncio.ensure_future(self.process())
         return
 
-    def set_sp1(self, value):
-        self.sp1 = value
+    def set_host(self, value):
+        self.host = value
         return
 
-    def get_sp1(self):
-        return self.sp1
+    def get_host(self):
+        return self.host
 
-    def set_sp2(self, value):
-        self.sp2 = value
+    def set_port(self, value):
+        self.port = value
         return
 
-    def get_sp2(self):
-        return self.sp2
+    def get_port(self):
+        return self.port
 
     def destroy(self):
         self.dead = True
@@ -124,23 +124,27 @@ class SessionManager(Object):
         super().__init__(name, parent)
         self._session = session
 
-        self.add_child(SimpleLiveProperty("sp1", self,
-                                          session.get_sp1,
-                                          session.set_sp1))
+        # FIXME: this probably needs to be done by a provided function,
+        # FIXME: since there's no way to know what the children should
+        # FIXME: be otherwise.
+        self.add_child(SimpleLiveProperty("host", self,
+                                          session.get_host,
+                                          session.set_host))
 
-        self.add_child(SimpleLiveProperty("sp2", self,
-                                          session.get_sp2,
-                                          session.set_sp2))
+        self.add_child(SimpleLiveProperty("port", self,
+                                          session.get_port,
+                                          session.set_port))
         return
 
     def delete(self):
-        sp1 = self.remove_child("sp1")
-        sp1.delete()
-        del sp1
+        # FIXME: this could just walk all children of Object & List?
+        host = self.remove_child("host")
+        host.delete()
+        del host
 
-        sp2 = self.remove_child("sp2")
-        sp2.delete()
-        del sp2
+        port = self.remove_child("port")
+        port.delete()
+        del port
 
         super().delete()
         return
@@ -177,7 +181,7 @@ class ServerManager(Object):
 
 async def sequence(server, manager):
 
-    sessions: SessionsManager = manager.get_node('config.running.sessions')
+    sessions: SessionsManager = manager.get_node('config/running/sessions')
 
     await asyncio.sleep(2)
     sessions.add_session('sa')
@@ -192,6 +196,8 @@ async def sequence(server, manager):
     sessions.delete_session('sa')
 
     await asyncio.sleep(1)
+
+    manager.save_running()
     return
 
 
@@ -200,7 +206,7 @@ def test_construct():
     s = Server()
     m = Manager()
 
-    running = m.get_node('config.running')
+    running = m.get_node('config/running')
     server = running.add_child(Object("server", running))
     server.add_child(SimpleLiveProperty("p1", server, s.get_p1))
     server.add_child(P2Node("p2", server, s))
