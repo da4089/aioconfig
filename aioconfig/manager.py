@@ -70,7 +70,7 @@ class Manager:
 
         :param name: Full path to node."""
 
-        names = name.split('.')
+        names = name.split('/')
 
         current = self._root
         while names:
@@ -102,10 +102,10 @@ class Manager:
         now = datetime.datetime.utcnow()
         name = now.strftime('%Y-%m-%dT%H:%M:%S.') + "%06u" % now.microsecond
 
-        saved = self.get_node('config.saved')
+        saved = self.get_node('config/saved')
         saved.add_child(Object(name))
 
-        return self.copy('running', 'saved.' + name)
+        return self.copy('config/running', 'config/saved/' + name)
 
     def restore_running(self, savepoint: str = None):
         """Load a previously-saved configuration to running.
@@ -117,11 +117,11 @@ class Manager:
 
     def save_staged(self):
         """Persist staged configuration."""
-        return self.copy('staged', 'saved.staged')
+        return self.copy('staged', 'saved/staged')
 
     def restore_staged(self):
         """Load the persisted staged configuration."""
-        return self.copy('saved.staged', 'staged')
+        return self.copy('saved/staged', 'staged')
 
     def deploy_staged(self):
         """Copy staged configuration to running."""
