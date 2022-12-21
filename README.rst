@@ -2,7 +2,7 @@ aioconfig
 =========
 
 This package provides a set of classes that can be used to implement a
-configuration and control system for server processes.
+configuration and control system for Python server processes.
 
 Features
 --------
@@ -52,4 +52,3 @@ be assembled and checked prior to being applied.  And when the running
 configuration is saved, the previous saved configuration is retained,
 so the change can be rolled back, and historical comparisons made at any
 time.
-
